@@ -77,7 +77,8 @@ void get_p_name(int aux, char p_name[]){
     }
 }
 
-/*Returns the attack type of a piece. Can have 3 outputs
+/*Returns the attack type of a piece by receiving a piece.
+  Can have 3 outputs
   1: diagonal attack only (bishop)
   2: vertical and horizontal attack (rook)
   3: type 1 and 2 (queen)*/
@@ -104,7 +105,7 @@ int horizontal_attack(P p1, P p2){
     //can attack horizontally
     if((p1.x == p2.x) && (attack_type(p1) > 1)){
 
-        //guarantees that p1 is on the left
+        //guarantees that p1 is to the left of p2
         if(p1.y > p2.y){
             P aux = p1;
             p1 = p2;
@@ -130,19 +131,124 @@ int horizontal_attack(P p1, P p2){
     }
 }
 
+/*Checks if piece 1 can attack piece two in its vertical
+  Returns 1 if piece 1 can attack piece 2 and 0 if it cant attack*/
+int vertical_attack(P p1, P p2){
 
-/*Receives the board and a piece. Has 2 different outputs:
-  1: This piece is not attacking and not being attacked by any 
-  other piece in its horizontal line
-  0: This piece is attacking or being attacked by other piece
-  in its horizontal */ 
-int checks_pacific_horizontal(int board[][8], P p){
+    //checks if they are in the same y coordinate and if p1 
+    //can attack vertically
+    if((p1.y == p2.y) && (attack_type(p1) > 1)){
 
+        //guarantees that p1 is above p2
+        if(p1.x > p2.x){
+            P aux = p1;
+            p1 = p2;
+            p2 = aux;
+        }
+
+        //checks if the path between p1 and p2 is clear
+        for(int x = p1.x + 1; x < p2.x; x++){
+            
+            //if there is a piece blocking the attack, return 0
+            if(board[x][p1.y] != 0){
+                return 0;
+            }
+
+        }
+
+        //if the path is clear, returns 1
+        return 1;
+
+    }
+    else{
+        return 0;
+    }
 }
 
 
+/*Checks if piece 1 can attack piece two in its diagonal
+  Returns 1 if piece 1 can attack piece 2 and 0 if it cant attack*/
+int diagonal_attack(P p1, P p2){
+
+    //calculates the rise and run of p1 and p2 coordinates 
+    int rise = p1.y - p2.y;
+    int run = p1.x - p2.x;
+    int slope = 0;
+
+    //calculates slope if run is not 0 (avoiding errors)
+    if(run != 0){
+        slope = rise/run;
+    }
+
+    //checks if p1 and p2 are in the same diagonal and if p1 
+    //can attack diagonally
+    if( (slope == 1 || slope == -1) && (attack_type(p1) == 3 || attack_type(p1) == 1) ){
+        
+        //guarantees that p1 is to the left of p2
+        if(p1.y > p2.y){
+            P aux = p1;
+            p1 = p2;
+            p2 = aux;
+        }
+
+        //checks if the path between p1 and p2 is clear
+        for(int x = p1.x + slope, y = p1.y + 1; y < p2.y; x += slope, y++){
+                
+            //if there is a piece blocking the attack, return 0
+            if(board[x][y] != 0){
+                return 0;
+            }
+
+        }
+
+        //if the path is clear, returns 1
+        return 1;
+
+        }
+        else{
+            return 0;
+    }
+}
 
 
+/*Receives two pieces. Has 2 different outputs:
+  1: Piece 1 can attack piece 2.
+  0: Piece 1 cannot attack piece 2
+  Note: Does not specify how piece 1 can attack piece 2 
+  (horizontal, diagonal or vertical) */ 
+int check_attack(P p1, P p2){
+    return( vertical_attack(p1, p2) ||
+            horizontal_attack(p1, p2)||
+            diagonal_attack(p1, p2) );
+}
+
+/*Receives one piece. Returns 0 if this piece can attack any other
+  piece on the board or if it is being attacked by any other piece
+  Returns 1 if it is not attacking or being attacked by any other
+  piece*/
+int check_pacific_square(P p){
+
+    //loops all pieces
+    for(int i = 0; i < n_pieces; i++){
+        
+        //checks if the selected piece is not the same parameter piece
+        //of the function
+        if(p.x != pieces[i].x || p.y != pieces[i].y){
+
+            //checks if this piece can attack or be attacked
+            //by selected piece of for iteration
+            if(check_attack(p, pieces[i]) || check_attack(pieces[i], p)){
+                return 0;
+               }
+            
+        }
+    }
+    
+    //if the program didnt find any piece that satisfy condition
+    //related to output 0, returns 1
+    return 1;
+
+}
 //Receives the board and inserts a queen on the first square
 //where it doesnt attack any other piece
 void insert_pacific_q(int board[][8]){
