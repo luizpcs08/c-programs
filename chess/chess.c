@@ -51,12 +51,20 @@ void print_board(){
                 printf("# ");
             }
             else{
+                switch(board[i][j]){
+                    case 1:
+                        printf("Q ");
+                    break;
 
+                    default:
+                        printf("! ");
+                }
             }
 
         }
         printf("\n");
     }
+    printf("\n\n");
 }
 
 void end_message(){
@@ -249,10 +257,38 @@ int check_pacific_square(P p){
     return 1;
 
 }
-//Receives the board and inserts a queen on the first square
-//where it doesnt attack any other piece
-void insert_pacific_q(int board[][8]){
 
+/*Receives the piece type and inserts its maximum ammounth 
+  on the board in a pacific way. Returns the ammounth of
+  pieces that were inserted*/
+int insert_pacific_p(int aux){
+    int cont = 0;
+
+    //creates the first piece
+    P p;
+    p.type = aux;
+
+    //loops the board
+    for(int x = 0; x < I_BOARD; x++){
+
+        for( int y = 0; y < J_BOARD; y++){
+            
+            p.x = x;
+            p.y = y;
+
+            //insert piece if it is possible and if the square
+            //is empty
+            if(board[x][y] == 0 && check_pacific_square(p)){
+                board[x][y] = p.type;
+                pieces[n_pieces] = p;
+                n_pieces += 1;
+                cont++;
+            }
+
+        }
+    }
+
+    return cont;
 }
 
 void tabuleiro_da_paz(){
@@ -289,17 +325,32 @@ void tabuleiro_da_paz(){
     get_p_name(aux, p_name);
 
     //prints informative text to user 
-    printf("Você quer que o programa insira um número inicial de %s no tabuleiro? Se sim, digite o número desejado. Se não, digite 0.\n Número máximo de %s que podem ser inseridos: \n", p_name, p_name);
-    int n; //stores ammounth of initial pieces that will be on the board
-    scanf("%d", &n);
+    printf("Inserindo o máximo de %s possível \n", p_name);
 
-    //fill the board with n ammounth of the choosed piece in a "pacific" way
-    for(int i = 0; i < n; i++){
-        
+    //inserting pieces and storing ammounth that was inserted
+    int cont = insert_pacific_p(aux);
 
+    printf("Foi possível inserir %d %s\n\n", cont, p_name);
 
+    print_board();
+
+    printf("Selecione a próxima ação:\n1: Voltar ao seletor de funções\n0: Encerrar programa\n");
+    scanf("%d", &aux);
+
+    switch(aux){
+        case 1:
+            function_selector();
+            return;
+        break;
+
+        case 0:
+            end_message();
+            return;
+        break;
+
+        default:
+            return;
     }
-
 
 
 }
