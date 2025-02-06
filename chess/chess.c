@@ -16,49 +16,59 @@ typedef struct{
     int type, x, y;
 }P;
 
-//global matrix for board
-int board[I_BOARD][J_BOARD];
 
-//global vector for storing pieces
+
 P pieces[(I_BOARD * J_BOARD)];
 
-//global variable for pieces vector size
 int n_pieces = 0;
 
-/*Returns a piece by giving its x and y position on the
+/*Returns a piece pointer by giving its x and y position on the
   board*/
-P get_p(int x, int y){
+P* get_p(int x, int y){
 
     //loops pieces vector
     for(int i = 0; i < n_pieces; i++){
 
         //gets the piece that has the same x and y coordinates
         if( (pieces[i].x == x) && (pieces[i].y == y) ){
-            return pieces[i];
+            
+            return &pieces[i];
         }
+    }
+}
 
+//Returns 1 if there is a piece on that coordinate; 0 if it doesnt
+int check_coordinates(int x, int y){
+    //loops pieces vector
+    for(int i = 0; i < n_pieces; i++){
+        //gets the piece that has the same x and y coordinates
+        if( (pieces[i].x == x) && (pieces[i].y == y) ){
+             return 1;
+        }
     }
 
+    return 0;
 }
 
 
 void print_board(){
     //loops the board
-    for(int i = 0; i <= 7; i++){
-        for(int j = 0; j <= 7; j++){
+    for(int x = 0; x <= I_BOARD; x++){
+        for(int y = 0; y <= J_BOARD; y++){
 
-            if(board[i][j] == 0){
-                printf("# ");
-            }
-            else{
-                switch(board[i][j]){
-                    case 1:
+            if(check_coordinates(x, y)){
+                P* p = get_p(x, y);
+                switch(p -> type){
+                    case 1: 
                         printf("Q ");
                     break;
 
                     default:
                         printf("! ");
                 }
+            }
+            else{
+                printf("# ");
             }
 
         }
@@ -98,7 +108,7 @@ int attack_type(P p){
     break;
     
     default:
-        //
+        printf("Error: couldnt identify piece attack type\n");
     break;
     }
 
@@ -124,13 +134,12 @@ int horizontal_attack(P p1, P p2){
         for(int y = p1.y + 1; y < p2.y; y++){
             
             //if there is a piece blocking the attack, return 0
-            if(board[p1.x][y] != 0){
+            if(check_coordinates(p1.x, y)){
                 return 0;
             }
 
         }
 
-        //if the path is clear, returns 1
         return 1;
 
     }
@@ -158,13 +167,12 @@ int vertical_attack(P p1, P p2){
         for(int x = p1.x + 1; x < p2.x; x++){
             
             //if there is a piece blocking the attack, return 0
-            if(board[x][p1.y] != 0){
+            if(check_coordinates(x, p1.y)){
                 return 0;
             }
 
         }
 
-        //if the path is clear, returns 1
         return 1;
 
     }
@@ -203,13 +211,11 @@ int diagonal_attack(P p1, P p2){
         for(int x = p1.x + slope, y = p1.y + 1; y < p2.y; x += slope, y++){
                 
             //if there is a piece blocking the attack, return 0
-            if(board[x][y] != 0){
+            if(check_coordinates(x, y)){
                 return 0;
             }
 
         }
-
-        //if the path is clear, returns 1
         return 1;
 
         }
@@ -230,22 +236,35 @@ int check_attack(P p1, P p2){
             diagonal_attack(p1, p2) );
 }
 
-/*Receives one piece. Returns 0 if this piece can attack any other
-  piece on the board or if it is being attacked by any other piece
-  Returns 1 if it is not attacking or being attacked by any other
-  piece*/
-int check_pacific_square(P p){
+/*Receives a pointer of a piece and move it to new coordinates*/
+void move_p(P* p, int x, int y){
+    p -> x = x;
+    p -> y = y;
+    return;
+
+}
+
+/*Deletes a piece from pieces vector and board matrix*/
+void delete_p(P* p){
+    p -> type = 0;
+    return;
+}
+
+/*Receives coordinates of a square and piece type. Returns
+  if the square is pacific to the piece that is there. 
+  Outputs:
+  0 - Piece can attack or is being attacked
+  1 - piece is on a pacific square*/
+int check_pacific_square(P* p){
 
     //loops all pieces
     for(int i = 0; i < n_pieces; i++){
         
-        //checks if the selected piece is not the same parameter piece
-        //of the function
-        if(p.x != pieces[i].x || p.y != pieces[i].y){
+        //checks if the selected piece exists and its not the same address
+        if( (pieces[i].type != 0) && (&pieces[i] != p) ){
 
             //checks if this piece can attack or be attacked
-            //by selected piece of for iteration
-            if(check_attack(p, pieces[i]) || check_attack(pieces[i], p)){
+            if(check_attack(*p, pieces[i]) || check_attack(pieces[i], *p)){
                 return 0;
                }
             
@@ -258,37 +277,52 @@ int check_pacific_square(P p){
 
 }
 
-/*Receives the piece type and inserts its maximum ammounth 
-  on the board in a pacific way. Returns the ammounth of
-  pieces that were inserted*/
-int insert_pacific_p(int aux){
-    int cont = 0;
+/*Recursive function
+  Insert 8 queens on the board in a way that they dont attack
+  themselves
+  x parameter stores the row that a queen will be inserted,
+  moved or deleted*/
+void insert_pacific_q(int x){
+    printf("Função chamada para x = %d\n",x);
 
-    //creates the first piece
-    P p;
-    p.type = aux;
+    //base case
+    if(x == I_BOARD){
+        return;
+    }
+   
+    //Gets piece of the row or creates it if it doesnt exists
+    P* p = &pieces[x];
 
-    //loops the board
-    for(int x = 0; x < I_BOARD; x++){
-
-        for( int y = 0; y < J_BOARD; y++){
-            
-            p.x = x;
-            p.y = y;
-
-            //insert piece if it is possible and if the square
-            //is empty
-            if(board[x][y] == 0 && check_pacific_square(p)){
-                board[x][y] = p.type;
-                pieces[n_pieces] = p;
-                n_pieces += 1;
-                cont++;
-            }
-
-        }
+    if(p -> type == 0){
+        p -> x = x;
+        p -> y = -1;
+        p -> type = 1;
     }
 
-    return cont;
+    //loops squares to the right of p
+    for(int y = (p -> y) + 1; y <= J_BOARD; y++){
+
+        //if overflow, go to previous line
+        if(y == J_BOARD){
+            delete_p(p);
+            n_pieces--;
+            printf("peça em x = %d deletada\n", x);
+            insert_pacific_q(x - 1);
+            return;
+        }
+
+        move_p(p, x, y);
+
+        //try to moves queen to next possible square on the row
+        if(check_pacific_square(p)){
+            printf("peça em x = %d movida para y = %d\n", x, p -> y);
+            n_pieces++;
+            insert_pacific_q(x + 1);
+            return;
+        }
+
+        
+    }
 }
 
 void tabuleiro_da_paz(){
@@ -323,15 +357,10 @@ void tabuleiro_da_paz(){
     //gets the P name by using the aux variable
     char p_name[P_NAME_MAX];
     get_p_name(aux, p_name);
-
-    //prints informative text to user 
     printf("Inserindo o máximo de %s possível \n", p_name);
 
-    //inserting pieces and storing ammounth that was inserted
-    int cont = insert_pacific_p(aux);
-
-    printf("Foi possível inserir %d %s\n\n", cont, p_name);
-
+    //call insert function and print board
+    insert_pacific_q(0);
     print_board();
 
     printf("Selecione a próxima ação:\n1: Voltar ao seletor de funções\n0: Encerrar programa\n");
@@ -382,11 +411,10 @@ void function_selector(){
 
 int main(){
 
-    //fill all board spaces with 0
-    for(int i = 0; i <= 7; i++){
-        for(int j = 0; j <= 7; j++){
-            board[i][j] = 0;
-        }
+    //fill all pieces vector with type 0 pieces (empty)
+    for(int i = 0; i < I_BOARD * J_BOARD; i++){
+        P p = {.type = 0};
+        pieces[i] = p;
     }
     
     function_selector();
