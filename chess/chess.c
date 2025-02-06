@@ -53,8 +53,8 @@ int check_coordinates(int x, int y){
 
 void print_board(){
     //loops the board
-    for(int x = 0; x <= I_BOARD; x++){
-        for(int y = 0; y <= J_BOARD; y++){
+    for(int x = 0; x < I_BOARD; x++){
+        for(int y = 0; y < J_BOARD; y++){
 
             if(check_coordinates(x, y)){
                 P* p = get_p(x, y);
@@ -82,8 +82,7 @@ void end_message(){
     return;
 }
 
-//Gets the piece name using the numeric option that was inserted
-//in scanf and stores it in p_name parameter.
+//Gets the piece name stores it in p_name parameter.
 void get_p_name(int aux, char p_name[]){
     switch (aux){
 
@@ -115,12 +114,10 @@ int attack_type(P p){
     return 0;
 }
 
-/*Checks if piece 1 can attack piece two in its horizontal
-  Returns 1 if piece 1 can attack piece 2*/
+/*Returns 1 if piece 1 can attack piece 2 in its horizontal*/
 int horizontal_attack(P p1, P p2){
 
-    //checks if they are in the same x coordinate and if p1 
-    //can attack horizontally
+    //checks if they are in the same x  and if p1 can attack horizontally
     if((p1.x == p2.x) && (attack_type(p1) > 1)){
 
         //guarantees that p1 is to the left of p2
@@ -139,7 +136,6 @@ int horizontal_attack(P p1, P p2){
             }
 
         }
-
         return 1;
 
     }
@@ -148,8 +144,7 @@ int horizontal_attack(P p1, P p2){
     }
 }
 
-/*Checks if piece 1 can attack piece two in its vertical
-  Returns 1 if piece 1 can attack piece 2 and 0 if it cant attack*/
+/*Returns 1 if piece 1 can attack piece 2 in its vertical*/
 int vertical_attack(P p1, P p2){
 
     //checks if they are in the same y coordinate and if p1 
@@ -172,7 +167,6 @@ int vertical_attack(P p1, P p2){
             }
 
         }
-
         return 1;
 
     }
@@ -182,8 +176,7 @@ int vertical_attack(P p1, P p2){
 }
 
 
-/*Checks if piece 1 can attack piece two in its diagonal
-  Returns 1 if piece 1 can attack piece 2 and 0 if it cant attack*/
+/*Returns 1 if piece 1 can attack piece 2 in its diagonal*/
 int diagonal_attack(P p1, P p2){
 
     //calculates the rise and run of p1 and p2 coordinates 
@@ -191,8 +184,8 @@ int diagonal_attack(P p1, P p2){
     int run = p1.x - p2.x;
     int slope = 0;
 
-    //calculates slope if run is not 0 (avoiding errors)
-    if(run != 0){
+    //calculates slope 
+    if(run != 0 && rise % run == 0){
         slope = rise/run;
     }
 
@@ -225,11 +218,7 @@ int diagonal_attack(P p1, P p2){
 }
 
 
-/*Receives two pieces. Has 2 different outputs:
-  1: Piece 1 can attack piece 2.
-  0: Piece 1 cannot attack piece 2
-  Note: Does not specify how piece 1 can attack piece 2 
-  (horizontal, diagonal or vertical) */ 
+/*Returns 1 if piece 1 can attack piece 2 in some way*/
 int check_attack(P p1, P p2){
     return( vertical_attack(p1, p2) ||
             horizontal_attack(p1, p2)||
@@ -282,11 +271,16 @@ int check_pacific_square(P* p){
   themselves
   x parameter stores the row that a queen will be inserted,
   moved or deleted*/
-void insert_pacific_q(int x){
-    printf("Função chamada para x = %d\n",x);
+void insert_pacific_q(int x, int cont){
+    cont ++;
 
     //base case
     if(x == I_BOARD){
+        printf("A solution was found\n");
+        return;
+    }
+    else if(x < 0){
+        printf("ERROR: a solution couldnt be founded");
         return;
     }
    
@@ -299,29 +293,25 @@ void insert_pacific_q(int x){
         p -> type = 1;
     }
 
-    //loops squares to the right of p
+    //loops squares  p
     for(int y = (p -> y) + 1; y <= J_BOARD; y++){
 
         //if overflow, go to previous line
         if(y == J_BOARD){
             delete_p(p);
             n_pieces--;
-            printf("peça em x = %d deletada\n", x);
-            insert_pacific_q(x - 1);
-            return;
+            insert_pacific_q(x - 1, cont);
+            break;
         }
 
         move_p(p, x, y);
 
         //try to moves queen to next possible square on the row
         if(check_pacific_square(p)){
-            printf("peça em x = %d movida para y = %d\n", x, p -> y);
             n_pieces++;
-            insert_pacific_q(x + 1);
-            return;
+            insert_pacific_q(x + 1, cont);
+            break;
         }
-
-        
     }
 }
 
@@ -360,7 +350,7 @@ void tabuleiro_da_paz(){
     printf("Inserindo o máximo de %s possível \n", p_name);
 
     //call insert function and print board
-    insert_pacific_q(0);
+    insert_pacific_q(0, 0);
     print_board();
 
     printf("Selecione a próxima ação:\n1: Voltar ao seletor de funções\n0: Encerrar programa\n");
