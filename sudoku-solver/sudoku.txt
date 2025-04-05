@@ -1,0 +1,19 @@
+fazer gerador de numeros aleatorios entre 17 e 30 (quantidade de dicas)
+
+fazer gerador de tabuleiross
+(o sudoku vai ter 9 quadrados 3/3 = 81 )
+tenho que inserir as dicas aleatoriamente  verificando as regras do jogo
+se inserir, completar o resto.
+
+
+
+testar se o tabuleiro gerado tem apenas 1 unica solução. Para isso, posso continuar o backtracking e ver se ele acha outra solução. Se ele achar, repitir o processo
+
+Quando confirmar a solução, mostrar a tela inicial com as dicas e perguntar se ousuario que a solução. se sim,
+
+
+imprimir tabuleiro completo
+
+posso fazer uma opção para inserir um jogo e dizer seo jogo tem apenas uma solução
+
+é isso, boa sorte amado.
